@@ -1,0 +1,75 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: duo-f1-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - f1-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  duo-f1-backend:
+    build:
+      context: ./duo-f1-backend
+      dockerfile: Dockerfile
+    container_name: duo-f1-backend
+    ports:
+      - "8001:80"
+    volumes:
+      - ./duo-f1-backend:/var/www/html
+    environment:
+      APP_ENV: local
+      APP_DEBUG: true
+      CACHE_DRIVER: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      BROADCAST_DRIVER: redis
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - f1-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  duo-f1-frontend:
+    build:
+      context: ./duo-f1-frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: duo-f1-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./duo-f1-frontend:/app
+      - /app/node_modules
+    environment:
+      VITE_API_URL: http://localhost:8000/api
+    networks:
+      - f1-network
+    depends_on:
+      - duo-f1-backend
+
+  duo-f1-stream:
+    build:
+      context: ./duo-f1-stream
+      dockerfile: Dockerfile
+    container_name: duo-f1-stream
+    environment:
+      API_URL: http://duo-f1-backend/api
+    depends_on:
+      - duo-f1-backend
+    networks:
+      - f1-network
+    restart: unless-stopped
+
+networks:
+  f1-network:
+    driver: bridge
