@@ -31,7 +31,7 @@ echo -e "${YELLOW}[2/6] Setting environment variables...${NC}"
 
 if [ ! -f duo-f1-backend/.env ]; then
     echo -e "${BLUE}|- Creating duo-f1-backend/.env...${NC}"
-    cp duo-f1-backend/.env.example backend/.env
+    cp duo-f1-backend/.env.example duo-f1-backend/.env
     
     rm duo-f1-backend/.env.bak 2>/dev/null || true
     
