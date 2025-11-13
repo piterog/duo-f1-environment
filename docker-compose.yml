@@ -51,7 +51,7 @@ services:
       - ./duo-f1-frontend:/app
       - /app/node_modules
     environment:
-      VITE_API_URL: http://localhost:8000/api
+      VITE_API_URL: http://localhost:8001/api
     networks:
       - f1-network
     depends_on:
@@ -65,7 +65,8 @@ services:
     environment:
       API_URL: http://duo-f1-backend/api
     depends_on:
-      - duo-f1-backend
+      duo-f1-backend:
+        condition: service_healthy
     networks:
       - f1-network
     restart: unless-stopped
